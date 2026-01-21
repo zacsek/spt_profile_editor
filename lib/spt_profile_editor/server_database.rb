@@ -13,6 +13,30 @@ module SptProfileEditor
       load_database
     end
 
+    def search_items_by_name(query)
+      return [] if query.nil? || query.strip.empty?
+      
+      downcased_query = query.downcase
+      results = []
+
+      @items.each do |id, item_data|
+        # Only consider valid items (usually have a parent and properties)
+        next unless item_data['_type'] == 'Item'
+        
+        name = @locales["#{id} Name"]
+        next if name.nil?
+
+        if name.downcase.include?(downcased_query)
+          results << {
+            id: id,
+            name: name,
+            props: item_data['_props']
+          }
+        end
+      end
+      results
+    end
+
     private
 
     def load_database

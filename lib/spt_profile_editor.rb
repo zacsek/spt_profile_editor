@@ -42,5 +42,9 @@ module SptProfileEditor
       saver.save(@profile_path, target_path)
       puts "Profile saved to #{target_path}"
     end
+
+    def search_item(name)
+      @db.search_items_by_name(name)
+    end
   end
 end

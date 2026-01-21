@@ -28,29 +28,63 @@ module SptProfileEditor
     end
     
     def add_money(tpl, amount)
-      # Find if there is already a stack of this money in the inventory
-      money_stack = money.find { |item| item.tpl == tpl }
-      if money_stack
-        money_stack.count += amount
+      add_item_by_id(tpl, amount)
+    end
+
+    def add_item_by_id(tpl, count)
+      item_info = @db.items[tpl]
+      raise "Item #{tpl} not found in database" unless item_info
+
+      stack_max_size = item_info.dig('_props', 'StackMaxSize') || 1
+
+      if stack_max_size > 1
+        # Stackable: Try to merge into existing stacks first
+        existing_stacks = stash_items.select { |item| item.tpl == tpl }
+        
+        existing_stacks.each do |stack|
+          break if count <= 0
+          space = stack_max_size - stack.count
+          next if space <= 0
+          
+          to_add = [count, space].min
+          stack.count += to_add
+          count -= to_add
+        end
+
+        # Create new stacks for remaining count
+        while count > 0
+          to_create = [count, stack_max_size].min
+          create_item_entry(tpl, to_create)
+          count -= to_create
+        end
       else
-        # If no stack exists, we need to create a new item.
-        # This is a simplified version. A full implementation needs to find a free slot.
-        new_id = generate_new_id
-        new_item_hash = {
-          "_id" => new_id,
-          "_tpl" => tpl,
-          "parentId" => stash_id,
-          "slotId" => "hideout",
-          "location" => { "x" => 0, "y" => 0, "r" => "Horizontal" }, # Placeholder location
-          "upd" => { "StackObjectsCount" => amount }
-        }
-        @data['items'] << new_item_hash
-        @items << InventoryItem.new(new_item_hash, @db)
-        puts "Warning: Added new money stack at placeholder location [0,0]. Full slot finding not implemented."
+        # Not stackable: Create 'count' individual items
+        count.times { create_item_entry(tpl, 1) }
       end
     end
 
     private
+
+    def create_item_entry(tpl, count)
+      new_id = generate_new_id
+      new_item_hash = {
+        "_id" => new_id,
+        "_tpl" => tpl,
+        "parentId" => stash_id,
+        "slotId" => "hideout",
+        "location" => { "x" => 0, "y" => 0, "r" => "Horizontal" }, # Placeholder location
+        "upd" => { "StackObjectsCount" => count }
+      }
+      
+      # Remove StackObjectsCount for non-stackables to be cleaner? 
+      # The game usually expects it strictly for stackables.
+      # If count is 1 and it's not stackable, usually 'upd' might assume SpawnedInSession or just be empty.
+      # But sticking to the requested logic.
+      
+      @data['items'] << new_item_hash
+      @items << InventoryItem.new(new_item_hash, @db)
+      puts "Warning: Added item #{tpl} (count: #{count}) at placeholder location."
+    end
     
     def generate_new_id
       existing_ids = @items.map(&:id)

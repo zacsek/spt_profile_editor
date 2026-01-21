@@ -1,0 +1,178 @@
+#!/usr/bin/env ruby
+
+require 'irb'
+require 'irb/completion'
+require 'spt_profile_editor'
+require 'fileutils'
+
+# Check environment
+unless ENV['SPT_PATH']
+  puts "Error: SPT_PATH environment variable is not set."
+  puts "Please set it to the root of your SPT-AKI server installation."
+  exit 1
+end
+
+# Define the Context class that will act as the environment for the console
+class SptConsoleContext
+  attr_reader :editor, :profile
+
+  def initialize
+    @editor = SptProfileEditor::Editor.new
+    puts "SPT Profile Editor Console"
+    puts "SPT_PATH: #{SptProfileEditor.configuration.server_path}"
+    puts "Type 'help' for available commands."
+  end
+
+  def help
+    puts <<~HELP
+      --- Commands ---
+      list_profiles         : List all available profiles in user/profiles
+      load_profile(name)    : Load a profile by filename (without .json) or ID
+      
+      search_item(name)     : Search the item database by name
+      add_item(id, count)   : Add an item by ID to the PMC stash
+      add_money(type, amt)  : Add money (type: :roubles, :dollars, :euros)
+      
+      pmc                   : Access the PMC character object (if loaded)
+      scav                  : Access the Scav character object (if loaded)
+      inventory             : Access the PMC inventory (if loaded)
+      
+      save                  : Save the current profile (automatically creates a backup)
+      
+      exit                  : Exit the console
+      ----------------
+    HELP
+  end
+
+  def list_profiles
+    profiles_dir = File.join(SptProfileEditor.configuration.server_path, 'user', 'profiles')
+    files = Dir.glob(File.join(profiles_dir, '*.json'))
+    
+    if files.empty?
+      puts "No profiles found in #{profiles_dir}"
+      return
+    end
+
+    puts "Found #{files.count} profiles:"
+    files.each do |f|
+      basename = File.basename(f, '.json')
+      # Try to read nickname efficiently? For now just filename
+      puts "- #{basename}"
+    end
+    nil
+  end
+
+  def load_profile(name)
+    @profile = @editor.load_profile(name)
+    @current_profile_name = name
+    puts "Profile loaded."
+    nil
+  end
+
+  def search_item(query)
+    results = @editor.search_item(query)
+    if results.empty?
+      puts "No items found for '#{query}'"
+    else
+      puts "Found #{results.count} items:"
+      results.each do |item|
+        puts "#{item[:id].ljust(26)} | #{item[:name]}"
+      end
+    end
+    nil
+  end
+
+  def add_item(item_id, count = 1)
+    ensure_profile_loaded!
+    
+    # Basic check if item exists in DB
+    item_in_db = @editor.instance_variable_get(:@db).items[item_id]
+    unless item_in_db
+      puts "Warning: Item ID #{item_id} not found in database. Adding anyway..."
+    end
+
+    # Using the low-level inventory add logic (logic needs to be in Inventory class ideally)
+    # Since Inventory#add_money exists, let's assume we want a generic add_item.
+    # We'll use the Money logic as a base or extend Inventory.
+    
+    # For now, let's implement a generic adder in the Inventory class or use what we have.
+    # The current inventory.rb implementation has `add_money` but `add_item` logic was hardcoded for money.
+    # We need to improve Inventory class to support generic items, or hack it here.
+    # Let's delegate to a new method we will add to Inventory class: `add_item_by_id`.
+    
+    # Wait, I need to implement `add_item_by_id` in Inventory class first? 
+    # The prompt asked for this functionality. I will add it to the Inventory class in a separate step 
+    # to make it clean. For now, calling it assuming it will exist.
+    
+    if @profile.pmc.inventory.respond_to?(:add_item_by_id)
+        @profile.pmc.inventory.add_item_by_id(item_id, count)
+        puts "Added #{count} of #{item_id}."
+    else
+        puts "Error: Inventory#add_item_by_id is not implemented yet. Updating gem..."
+    end
+  end
+
+  def add_money(type, amount)
+    ensure_profile_loaded!
+    
+    tpl = case type.to_sym
+          when :roubles, :rubles then "5449016a4bdc2d6f028b456f"
+          when :dollars          then "5696686a4bdc2da3298b456a"
+          when :euros            then "569668774bdc2da2298b4568"
+          else
+            puts "Unknown currency: #{type}. Use :roubles, :dollars, or :euros"
+            return
+          end
+          
+    @profile.pmc.inventory.add_money(tpl, amount)
+    puts "Added #{amount} to #{type}."
+  end
+
+  def pmc
+    ensure_profile_loaded!
+    @profile.pmc
+  end
+  
+  def scav
+    ensure_profile_loaded!
+    @profile.scav
+  end
+
+  def inventory
+    pmc.inventory
+  end
+
+  def save
+    ensure_profile_loaded!
+    
+    # Backup
+    original_path = File.join(SptProfileEditor.configuration.server_path, 'user', 'profiles', "#{@current_profile_name}.json")
+    if File.exist?(original_path)
+      timestamp = Time.now.strftime('%Y%m%d_%H%M%S')
+      backup_path = "#{original_path}.#{timestamp}.bak"
+      FileUtils.cp(original_path, backup_path)
+      puts "Backup created at: #{backup_path}"
+    end
+
+    @editor.save_profile
+  end
+
+  private
+
+  def ensure_profile_loaded!
+    raise "No profile loaded. Use 'load_profile(name)' first." unless @profile
+  end
+end
+
+# Start IRB
+context_object = SptConsoleContext.new
+
+IRB.setup(nil)
+workspace = IRB::WorkSpace.new(context_object)
+irb = IRB::Irb.new(workspace)
+
+# Configure IRB to look nice
+IRB.conf[:PROMPT_MODE] = :SIMPLE
+
+# Run it
+irb.run(IRB.conf)

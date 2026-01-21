@@ -24,22 +24,27 @@ begin
   # 1. Initialize the editor. It will automatically use the SPT_PATH env var.
   editor = SptProfileEditor::Editor.new
 
-  # 2. Load the profile
+  # 2. Search for an item example
+  puts "\n--- Searching for 'Graphics Card' ---"
+  results = editor.search_item("Graphics Card")
+  results.each do |item|
+    puts "Found: #{item[:name]} (ID: #{item[:id]})"
+  end
+  puts "-------------------------------------\n"
+
+  # 3. Load the profile
   editor.load_profile(PROFILE_NAME)
 
-  # 3. Get the profile object
+  # 4. Get the profile object
   profile = editor.profile
 
-  # 4. Modify the profile
-  # Example: Add 1 million roubles.
-  # This requires finding the roubles item in the inventory and changing its amount.
-  # For now, we will just change the level as a demonstration.
+  # 5. Modify the profile
   new_level = profile.pmc.level + 1
   puts "Increasing level from #{profile.pmc.level} to #{new_level}"
   profile.pmc.level = new_level
 
 
-  # 5. Save the changes
+  # 6. Save the changes
   editor.save_profile
 
   puts "\nDone."

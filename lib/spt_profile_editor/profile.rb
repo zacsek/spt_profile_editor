@@ -5,6 +5,7 @@ require_relative 'inventory'
 module SptProfileEditor
   # Represents the entire user profile.
   class Profile
+    attr_reader :data
     attr_accessor :characters, :user_builds, :customisation_unlocks
 
     def initialize(data_hash, database)

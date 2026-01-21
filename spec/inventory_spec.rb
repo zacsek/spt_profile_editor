@@ -11,8 +11,8 @@ RSpec.describe SptProfileEditor::Inventory do
   let(:mock_db) do
     instance_double(SptProfileEditor::ServerDatabase,
       items: {
-        "5449016a4bdc2d6f028b456f" => { "_parent" => "543be5dd4bdc2d3c308b4569" }, # Roubles
-        "5d235b4d86f7742e017bc88a" => { "_parent" => "543be5dd4bdc2d3c308b4569" }  # GPUs
+        "5449016a4bdc2d6f028b456f" => { "_parent" => "543be5dd4bdc2d3c308b4569", "_props" => { "StackMaxSize" => 500000 } }, # Roubles
+        "5d235b4d86f7742e017bc88a" => { "_parent" => "543be5dd4bdc2d3c308b4569", "_props" => { "StackMaxSize" => 50 } }  # GPUs (Simulated stackable)
       },
       locales: {
         "5449016a4bdc2d6f028b456f Name" => "Roubles"
