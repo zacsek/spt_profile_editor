@@ -1,0 +1,50 @@
+#!/usr/bin/env ruby
+
+require 'spt_profile_editor'
+
+# --- Configuration ---
+# Your profile file name (without .json).
+# Example: If your profile is `a1b2c3d4.json`, set this to "a1b2c3d4"
+PROFILE_NAME = "your_profile_id_here"
+# ---
+
+unless ENV['SPT_PATH']
+  puts "Error: SPT_PATH environment variable is not set."
+  puts "Please set it to the root of your SPT-AKI server installation."
+  exit 1
+end
+
+if PROFILE_NAME == "your_profile_id_here"
+    puts "Error: Please edit this script (#{__FILE__}) and set the PROFILE_NAME variable."
+    exit 1
+end
+
+
+begin
+  # 1. Initialize the editor. It will automatically use the SPT_PATH env var.
+  editor = SptProfileEditor::Editor.new
+
+  # 2. Load the profile
+  editor.load_profile(PROFILE_NAME)
+
+  # 3. Get the profile object
+  profile = editor.profile
+
+  # 4. Modify the profile
+  # Example: Add 1 million roubles.
+  # This requires finding the roubles item in the inventory and changing its amount.
+  # For now, we will just change the level as a demonstration.
+  new_level = profile.pmc.level + 1
+  puts "Increasing level from #{profile.pmc.level} to #{new_level}"
+  profile.pmc.level = new_level
+
+
+  # 5. Save the changes
+  editor.save_profile
+
+  puts "\nDone."
+
+rescue => e
+  puts "\nAn error occurred: #{e.message}"
+  puts e.backtrace.join("\n")
+end
