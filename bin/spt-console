@@ -5,6 +5,9 @@ require 'irb/completion'
 require 'spt_profile_editor'
 require 'fileutils'
 
+ENV['SPT_PATH'] = '/home/zacsek/Games/tarkov/drive_c/SPTarkov/SPT'
+
+
 # Check environment
 unless ENV['SPT_PATH']
   puts "Error: SPT_PATH environment variable is not set."
