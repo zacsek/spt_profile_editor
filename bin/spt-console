@@ -2,6 +2,10 @@
 
 require 'irb'
 require 'irb/completion'
+
+# Add local lib to load path to use local changes
+$LOAD_PATH.unshift(File.expand_path('../lib', __dir__))
+
 require 'spt_profile_editor'
 require 'fileutils'
 
@@ -47,6 +51,10 @@ class SptConsoleContext
     HELP
   end
 
+  def db
+    @editor.db
+  end
+
   def list_profiles
     profiles_dir = File.join(SptProfileEditor.configuration.server_path, 'user', 'profiles')
     files = Dir.glob(File.join(profiles_dir, '*.json'))
@@ -82,7 +90,7 @@ class SptConsoleContext
         puts "#{item[:id].ljust(26)} | #{item[:name]}"
       end
     end
-    nil
+    results
   end
 
   def add_item(item_id, count = 1)

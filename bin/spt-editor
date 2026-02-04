@@ -1,5 +1,8 @@
 #!/usr/bin/env ruby
 
+# Add local lib to load path to use local changes
+$LOAD_PATH.unshift(File.expand_path('../lib', __dir__))
+
 require 'spt_profile_editor'
 
 # --- Configuration ---

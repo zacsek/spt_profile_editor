@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = "A Ruby library for reading and editing SPT-AKI profiles."
   spec.description = "A Ruby library for reading and editing SPT-AKI profiles. Allows for programmatic modification of player profiles for SPT-AKI."
-  spec.homepage = "https://github.com/gemini-testing/spt_profile_editor"
+  spec.homepage = "none"
   spec.required_ruby_version = ">= 3.2.0"
 
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
@@ -22,7 +22,9 @@ Gem::Specification.new do |spec|
   gemspec = File.basename(__FILE__)
   spec.files = IO.popen(%w[git ls-files -z], chdir: __dir__, err: IO::NULL) do |ls|
     ls.readlines("\x0", chomp: true).reject do |f|
-      (f == gemspec) || f.start_with?(*%w[Gemfile .gitignore .rspec spec/ .rubocop.yml])
+      (f == gemspec) ||
+        f.start_with?(*%w[Gemfile .gitignore .rspec spec/ .rubocop.yml]) ||
+        f.end_with?(".gem")
     end
   end
   spec.bindir = "bin"

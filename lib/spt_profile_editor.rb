@@ -12,7 +12,7 @@ module SptProfileEditor
   class Error < StandardError; end
 
   class Editor
-    attr_reader :profile
+    attr_reader :profile, :db
 
     def initialize(server_path = nil)
       SptProfileEditor.configure do |config|
