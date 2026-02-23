@@ -122,7 +122,7 @@ module SptProfileEditor
 
       @data["items"] << new_item_hash
       @items << InventoryItem.new(new_item_hash, @db)
-      puts "Warning: Added item #{tpl} (count: #{count}) at placeholder location."
+      # puts "Warning: Added item #{tpl} (count: #{count}) at placeholder location."
     end
 
     def generate_new_id
