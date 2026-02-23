@@ -29,95 +29,52 @@ The gem uses this path to find both your user profiles and the necessary server 
 
 ## Usage
 
-### Loading a Profile
+### Interactive TUI Editor
 
-First, create an `Editor` instance. Then, use the `load_profile` method with the name of your profile file (without the `.json` extension). Profile files are typically found in `<SPT_PATH>/user/profiles/` and have a `.json` extension.
+The fastest way to edit your profile is using the built-in TUI editor. It provides a visual interface for managing your character's skills and inventory.
 
-```ruby
-require 'spt_profile_editor'
-
-# The editor will automatically pick up the SPT_PATH environment variable.
-editor = SptProfileEditor::Editor.new
-
-# Load the profile associated with 'your_profile_id.json'
-editor.load_profile('your_profile_id')
-
-# Access the loaded profile object
-profile = editor.profile
+```bash
+spt-editor
 ```
 
-### Editing Character Data
+#### TUI Features
 
-You can access character data through the `profile` object. The PMC character is available via `profile.pmc`.
+- **Profile Selector**: Easily browse and select from all available SPT profiles.
+- **Skill Management**: View and modify common skills with immediate feedback.
+- **Inventory Management**:
+    - **Live Filtering**: Press `\` to search through your current inventory.
+    - **Smart Sorting**: Press `o` to toggle between name and count-based sorting.
+    - **Item Addition**: Press `/` to search the entire SPT item database and add items directly to your stash with custom quantities.
+- **Dynamic Layout**: Modern interface with overlay modals and responsive pane management.
 
-```ruby
-# Get the PMC character object
-pmc = profile.pmc
+#### Keyboard Shortcuts
 
-# Read character level and nickname
-puts "Nickname: #{pmc.nickname}"
-puts "Current Level: #{pmc.level}"
-
-# Change the character's level
-pmc.level = 50
-puts "New Level: #{pmc.level}"
-```
-
-### Inventory Management
-
-You can access a character's inventory through the `inventory` attribute.
-
-**Listing Money**
-
-The `inventory.money` method returns an array of all money items in the stash.
-
-```ruby
-puts "Money in Stash:"
-pmc.inventory.money.each do |money_stack|
-  puts "- #{money_stack.name}: #{money_stack.count.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1,').reverse}"
-end
-```
-
-**Adding Money**
-
-Use the `add_money` method to add a specific amount of a currency. You need the item's template ID (`_tpl`).
-
--   **Roubles:** `5449016a4bdc2d6f028b456f`
--   **Dollars:** `5696686a4bdc2da3298b456a`
--   **Euros:** `569668774bdc2da2298b4568`
-
-```ruby
-# Add 500,000 Roubles
-roubles_tpl = "5449016a4bdc2d6f028b456f"
-pmc.inventory.add_money(roubles_tpl, 500_000)
-
-puts "Added 500,000 Roubles."
-```
-> **Note:** The `add_money` function is currently simplified. If a stack of the specified currency already exists, it will be added to it. If not, a new item will be created at a placeholder location in the stash, which may not correspond to a valid free slot. Full grid-based slot finding is not yet implemented.
-
-### Saving the Profile
-
-After making changes, you can save the profile back to the original file or to a new file.
-
-```ruby
-# Save changes back to the original profile file
-editor.save_profile
-
-# Or, save to a new file
-# editor.save_profile("/path/to/new_profile.json")
-
-puts "Profile saved successfully."
-```
+| Key | Action |
+| :--- | :--- |
+| `Tab` | Toggle focus between Skills and Inventory panes |
+| `\` | Open local inventory search/filter |
+| `/` | Open global item database search (Add Item) |
+| `o` | Toggle inventory sort mode (None → Name → Count) |
+| `+` / `-` | Increase/Decrease selected skill progress |
+| `Home` / `End` | Jump to start/end of lists |
+| `PgUp` / `PgDn` | Scroll lists by 10 items |
+| `Ctrl+S` | Save all changes to the profile |
+| `q` | Quit application (works globally unless typing) |
+| `Esc` | Unfocus pane, close modal, or go back |
 
 ### Interactive Console
 
-The gem comes with an interactive console for easier profile management.
+For power users, a Ruby-based REPL is available.
 
 ```bash
 spt-console
 ```
 
-This launches a REPL where you can list profiles, load them, search for items, and edit the inventory using helper commands like `search_item`, `add_item`, and `save`.
+This launches a console where you can list profiles, load them, search for items, and edit the inventory using helper commands like `search_item`, `add_item`, and `save`.
+
+### Library Usage (Ruby API)
+
+You can also use the gem programmatically in your own scripts.
 
 ## Development
 
